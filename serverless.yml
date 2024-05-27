@@ -76,7 +76,7 @@ functions:
       - httpApi:
           path: /product
           method: post
-  getProducts:
+  getProduct:
     handler: src/handlers.getProducts
     events:
       - httpApi:

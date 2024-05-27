@@ -29,7 +29,7 @@ export const createProduct = async (event: APIGatewayProxyEvent): Promise<APIGat
   };
 };
 
-export const getProducts = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+export const getProduct = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const id = event.pathParameters?.id;
 
   const output = await docClient
