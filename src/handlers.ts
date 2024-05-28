@@ -11,7 +11,7 @@ export const createProduct = async (event: APIGatewayProxyEvent): Promise<APIGat
 
   const product = {
     ...reqBody,
-    productID: v4(),
+    productId: v4(),
   };
 
   await docClient
@@ -19,7 +19,7 @@ export const createProduct = async (event: APIGatewayProxyEvent): Promise<APIGat
       TableName: tableName,
       Item: {
         ...reqBody,
-        productID: v4(),
+        productId: v4(),
       },
     })
     .promise();
@@ -37,7 +37,7 @@ export const getProduct = async (event: APIGatewayProxyEvent): Promise<APIGatewa
     .get({
       TableName: tableName,
       Key: {
-        productID: id,
+        productId: id,
       },
     })
     .promise();
