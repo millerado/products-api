@@ -6,7 +6,8 @@ const docClient = new AWS.DynamoDB.DocumentClient();
 const tableName = "ProductsTable";
 
 export const createProduct = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  const reqBody = JSON.parse(event.body as string);
+  console.log("event", event);
+  const reqBody = JSON.parse(event?.body as string);
 
   const product = {
     ...reqBody,
