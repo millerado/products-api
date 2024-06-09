@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import AWS from "aws-sdk";
 import { v4 } from "uuid";
+import * as yup from "yup";
 
 const docClient = new AWS.DynamoDB.DocumentClient();
 const tableName = "ProductsTable";
@@ -8,27 +9,40 @@ const headers = {
   "content-type": "application/json",
 };
 
+const schema = yup.object().shape({
+  name: yup.string().required(),
+  description: yup.string().required(),
+  price: yup.number().required(),
+  available: yup.boolean().required(),
+});
+
 export const createProduct = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   console.log("event", event);
-  const reqBody = JSON.parse(event?.body as string);
+  try {
+    const reqBody = JSON.parse(event?.body as string);
 
-  const product = {
-    ...reqBody,
-    productId: v4(),
-  };
+    await schema.validate(reqBody, { abortEarly: false });
 
-  await docClient
-    .put({
-      TableName: tableName,
-      Item: product,
-    })
-    .promise();
+    const product = {
+      ...reqBody,
+      productId: v4(),
+    };
 
-  return {
-    statusCode: 200,
-    headers,
-    body: JSON.stringify(product),
-  };
+    await docClient
+      .put({
+        TableName: tableName,
+        Item: product,
+      })
+      .promise();
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(product),
+    };
+  } catch (error) {
+    return handleError(error);
+  }
 };
 
 class HttpError extends Error {
@@ -55,6 +69,26 @@ const fetchProductById = async (id: string) => {
 };
 
 const handleError = (error: unknown) => {
+  if (error instanceof yup.ValidationError) {
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({
+        errors: error.errors,
+      }),
+    };
+  }
+
+  if (error instanceof SyntaxError) {
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({
+        error: `Invalid request body format: ${error.message}`,
+      }),
+    };
+  }
+
   if (error instanceof HttpError) {
     return {
       statusCode: error.statusCody,
@@ -87,6 +121,8 @@ export const updateProduct = async (event: APIGatewayProxyEvent): Promise<APIGat
     await fetchProductById(id);
 
     const reqBody = JSON.parse(event?.body as string);
+
+    await schema.validate(reqBody, { abortEarly: false });
 
     const product = {
       ...reqBody,
